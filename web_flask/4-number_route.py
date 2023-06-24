@@ -1,44 +1,37 @@
 #!/usr/bin/python3
-'''A simple Flask web application.
-'''
+
 from flask import Flask
 
-
 app = Flask(__name__)
-'''The Flask application instance.'''
-app.url_map.strict_slashes = False
 
 
-@app.route('/')
-def index():
-    '''The home page.'''
-    return 'Hello HBNB!'
+@app.route('/', strict_slashes=False)
+def hello():
+    return "Hello HBNB!"
 
 
-@app.route('/hbnb')
+@app.route('/hbnb', strict_slashes=False)
 def hbnb():
-    '''The hbnb page.'''
-    return 'HBNB'
+    return "HBNB"
 
 
-@app.route('/c/<text>')
-def c_page(text):
-    '''The c page.'''
-    return 'C {}'.format(text.replace('_', ' '))
+@app.route('/c/<text>', strict_slashes=False)
+def cfun(text):
+    txt = text.replace('_', " ")
+    return "C {}". format(txt)
 
 
-@app.route('/python/<text>')
-@app.route('/python', defaults={'text': 'is cool'})
-def python_page(text):
-    '''The python page.'''
-    return 'Python {}'.format(text.replace('_', ' '))
+@app.route('/python', strict_slashes=False)
+@app.route('/python/<text>', strict_slashes=False)
+def python(text='is cool'):
+    txt = text.replace('_', " ")
+    return "Python {}". format(txt)
 
 
-@app.route('/number/<int:n>')
-def number_page(n):
-    '''The number page.'''
+@app.route('/number/<int:n>', strict_slashes=False)
+def number(n):
     return '{} is a number'.format(n)
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='5000')
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=True)

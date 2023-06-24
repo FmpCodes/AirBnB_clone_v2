@@ -1,182 +1,153 @@
 #!/usr/bin/python3
-""" Module for testing file storage"""
-import MySQLdb
-import os
+
 import unittest
-from datetime import datetime
-
-from models import storage
+import pep8
+from os import getenv
+from models.base_model import BaseModel
 from models.user import User
+from models.state import State
+from models.city import City
+from models.amenity import Amenity
+from models.place import Place
+from models.review import Review
+from models.engine.file_storage import FileStorage
+from models.engine.db_storage import DBStorage
+from sqlalchemy.orm.session import Session
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.orm import sessionmaker
+import models
 
 
-@unittest.skipIf(
-    os.getenv('HBNB_TYPE_STORAGE') != 'db', 'DBStorage test')
-class TestDBStorage(unittest.TestCase):
-    """ Class to test the database storage method """
+class TestDBstorage(unittest.TestCase):
+    """This will test de DB in mysql"""
+
+    @classmethod
+    def SetUpClass(cls):
+        if type(models.storage) == DBStorage:
+            cls.storage = DBStorage()
+            Base.metadata.create_all(cls.storage._DBStorage__engine)
+            Session = sessionmaker(bind=cls.storage._DBStorage__engine)
+            cls.storage._DBStorage__session = Session()
+            cls.user = User(email="abcd@holberton.com", password="betty")
+            cls.storage._DBStorage__session.add(cls.user)
+            cls.state = State(name="California")
+            cls.storage._DBStorage__session.add(cls.state)
+            cls.city = City(name="San_Francisco", state_id=cls.state.id)
+            cls.storage._DBStorage__session.add(cls.city)
+            cls.place = Place(city_id=cls.city.id, user_id=cls.uder.id, name="School")
+            cls.storage._DBStorage__session.add(cls.place)
+            cls.amenity = Amenity(name="Free_drinks")
+            cls.storage._DBStorage__session.add(cls.amenity)
+            cls.review = Review(place_id=cls.place.id, user_id=cls.user.id, text="Nice")
+            cls.storage._DBStorage__session.add(cls.review)
+            cls.storage._DBStorage__session.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Delete test classes to reinitialize DBStorage session"""
+        if type(models.storage) == DBStorage:
+            cls.storage._DBStorage__session.delete(cls.user)
+            cls.storage._DBStorage__session.delete(cls.state)
+            cls.storage._DBStorage__session.delete(cls.city)
+            cls.storage._DBStorage__session.delete(cls.amenity)
+            cls.storage._DBStorage__session.delete(cls.place)
+            cls.storage._DBStorage__session.delete(cls.review)
+            cls.storage._DBStorage__session.commit()
+            del cls.user
+            del cls.state
+            del cls.city
+            del cls.place
+            del cls.amenity
+            del cls.review
+            cls.storage._DBStorage__session.close()
+            del cls.storage
+
+    def test_pep8(self):
+        """Test pep8 styling."""
+        style = pep8.StyleGuide(quiet=True)
+        p = style.check_files(['models/engine/db_storage.py'])
+        self.assertEqual(p.total_errors, 0, "fix pep8")
+
+    def test_docstr(self):
+        """test docstrs."""
+        self.assertIsNone(DBStorage.__doc__)
+        self.assertIsNone(DBStorage.__init__.__doc__)
+        self.assertIsNone(DBStorage.all.__doc__)
+        self.assertIsNone(DBStorage.new.__doc__)
+        self.assertIsNone(DBStorage.save.__doc__)
+        self.assertIsNone(DBStorage.delete.__doc__)
+        self.assertIsNone(DBStorage.reload.__doc__)
+
+    @unittest.skipIf(type(models.storage) == FileStorage,"Test FS")
+    def test_attr(self):
+        self.assertTrue(isinstnce(self.storage._DBStorage__engine, Engine))
+        self.assertTrue(isinstance(self.storage._DBStorage__session, Session))
+
+    def test_met(self):
+        self.assertTrue(hasattr(DBStorage, "__init__"))
+        self.assertTrue(hasattr(DBStorage, "all"))
+        self.assertTrue(hasattr(DBStorage, "new"))
+        self.assertTrue(hasattr(DBStorage, "save"))
+        self.assertTrue(hasattr(DBStorage, "delete"))
+        self.assertTrue(hasattr(DBStorage, "reload"))
+
+    @unittest.skipIf(type(models.storage) == FileStorage, "Test FS")
+    def test_init(self):
+        self.assertTrue(isinstance(self.storage, DBStorage))
+
+    @unittest.skipIf(type(models.storage) == FileStorage, "Test FS")
+    def test_all(self):
+        obj = self.storage.all(State)
+        self.assertEqual(type(obj), dict)
+        self.assertEqual(len(obj), 1)
+        self.assertEqual(self.state, list(obj.values())[0])
+
+    @unittest.skipIf(type(models.storage) == FileStorage, "Test FS")
     def test_new(self):
-        """ New object is correctly added to database """
-        new = User(
-            email='john2020@gmail.com',
-            password='password',
-            first_name='John',
-            last_name='Zoldyck'
-        )
-        self.assertFalse(new in storage.all().values())
-        new.save()
-        self.assertTrue(new in storage.all().values())
-        dbc = MySQLdb.connect(
-            host=os.getenv('HBNB_MYSQL_HOST'),
-            port=3306,
-            user=os.getenv('HBNB_MYSQL_USER'),
-            passwd=os.getenv('HBNB_MYSQL_PWD'),
-            db=os.getenv('HBNB_MYSQL_DB')
-        )
-        cursor = dbc.cursor()
-        cursor.execute('SELECT * FROM users WHERE id="{}"'.format(new.id))
-        result = cursor.fetchone()
-        self.assertTrue(result is not None)
-        self.assertIn('john2020@gmail.com', result)
-        self.assertIn('password', result)
-        self.assertIn('John', result)
-        self.assertIn('Zoldyck', result)
-        cursor.close()
-        dbc.close()
+        cls = State(name="California")
+        slef.storage.new(cls)
+        store = list(self.storage._DBStrorage__session.new)
+        self.assertIn(cls, store)
 
-    def test_delete(self):
-        """ Object is correctly deleted from database """
-        new = User(
-            email='john2020@gmail.com',
-            password='password',
-            first_name='John',
-            last_name='Zoldyck'
-        )
-        obj_key = 'User.{}'.format(new.id)
-        dbc = MySQLdb.connect(
-            host=os.getenv('HBNB_MYSQL_HOST'),
-            port=3306,
-            user=os.getenv('HBNB_MYSQL_USER'),
-            passwd=os.getenv('HBNB_MYSQL_PWD'),
-            db=os.getenv('HBNB_MYSQL_DB')
-        )
-        new.save()
-        self.assertTrue(new in storage.all().values())
-        cursor = dbc.cursor()
-        cursor.execute('SELECT * FROM users WHERE id="{}"'.format(new.id))
-        result = cursor.fetchone()
-        self.assertTrue(result is not None)
-        self.assertIn('john2020@gmail.com', result)
-        self.assertIn('password', result)
-        self.assertIn('John', result)
-        self.assertIn('Zoldyck', result)
-        self.assertIn(obj_key, storage.all(User).keys())
-        new.delete()
-        self.assertNotIn(obj_key, storage.all(User).keys())
-        cursor.close()
-        dbc.close()
-
-    def test_reload(self):
-        """ Tests the reloading of the database session """
-        dbc = MySQLdb.connect(
-            host=os.getenv('HBNB_MYSQL_HOST'),
-            port=3306,
-            user=os.getenv('HBNB_MYSQL_USER'),
-            passwd=os.getenv('HBNB_MYSQL_PWD'),
-            db=os.getenv('HBNB_MYSQL_DB')
-        )
-        cursor = dbc.cursor()
-        cursor.execute(
-            'INSERT INTO users(id, created_at, updated_at, email, password' +
-            ', first_name, last_name) VALUES(%s, %s, %s, %s, %s, %s, %s);',
-            [
-                '4447-by-me',
-                str(datetime.now()),
-                str(datetime.now()),
-                'ben_pike@yahoo.com',
-                'pass',
-                'Benjamin',
-                'Pike',
-            ]
-        )
-        self.assertNotIn('User.4447-by-me', storage.all())
-        dbc.commit()
-        storage.reload()
-        self.assertIn('User.4447-by-me', storage.all())
-        cursor.close()
-        dbc.close()
-
+    @unittest.skipIf(type(models.storage) == FileStorage, "Test FS")
     def test_save(self):
-        """ object is successfully saved to database """
-        new = User(
-            email='john2020@gmail.com',
-            password='password',
-            first_name='John',
-            last_name='Zoldyck'
-        )
-        dbc = MySQLdb.connect(
-            host=os.getenv('HBNB_MYSQL_HOST'),
-            port=3306,
-            user=os.getenv('HBNB_MYSQL_USER'),
-            passwd=os.getenv('HBNB_MYSQL_PWD'),
-            db=os.getenv('HBNB_MYSQL_DB')
-        )
-        cursor = dbc.cursor()
-        cursor.execute('SELECT * FROM users WHERE id="{}"'.format(new.id))
-        result = cursor.fetchone()
-        cursor.execute('SELECT COUNT(*) FROM users;')
-        old_cnt = cursor.fetchone()[0]
-        self.assertTrue(result is None)
-        self.assertFalse(new in storage.all().values())
-        new.save()
-        dbc1 = MySQLdb.connect(
-            host=os.getenv('HBNB_MYSQL_HOST'),
-            port=3306,
-            user=os.getenv('HBNB_MYSQL_USER'),
-            passwd=os.getenv('HBNB_MYSQL_PWD'),
-            db=os.getenv('HBNB_MYSQL_DB')
-        )
-        cursor1 = dbc1.cursor()
-        cursor1.execute('SELECT * FROM users WHERE id="{}"'.format(new.id))
-        result = cursor1.fetchone()
-        cursor1.execute('SELECT COUNT(*) FROM users;')
-        new_cnt = cursor1.fetchone()[0]
-        self.assertFalse(result is None)
-        self.assertEqual(old_cnt + 1, new_cnt)
-        self.assertTrue(new in storage.all().values())
-        cursor1.close()
-        dbc1.close()
+        cls = State(name="Arizona")
+        self.storage._DBStorage__session.add(cls)
+        self.storage.save()
+        db = MySQLdb.connect(user="hbnb_test",
+                             passd="hbnb_test_pwd",
+                             db="hbnb_test_db")
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM states WHERE BINARY name = 'Arizona'")
+        query = cursor.fetchall()
+        self.assertEqual(1, len(query))
+        self.assertEqual(cls.id, query[0][0])
         cursor.close()
-        dbc.close()
 
-    def test_storage_var_created(self):
-        """ DBStorage object storage created """
-        from models.engine.db_storage import DBStorage
-        self.assertEqual(type(storage), DBStorage)
+    @unittest.skipIf(type(models.storage) == FileStorage, "Test FS")
+    def test_reload(self):
+        rl = self.storage._DBStorage__session
+        self.storage.reload()
+        self.assertIsInstance(self.storage.DBStorage__session, Session)
+        self.assertNotEqual(rl, self.storage._DBStorage__session)
+        self.storage._DBStorage__session.close()
+        self.storage._DBStorage__session = rl
 
-    def test_new_and_save(self):
-        '''testing  the new and save methods'''
-        db = MySQLdb.connect(user=os.getenv('HBNB_MYSQL_USER'),
-                             host=os.getenv('HBNB_MYSQL_HOST'),
-                             passwd=os.getenv('HBNB_MYSQL_PWD'),
-                             port=3306,
-                             db=os.getenv('HBNB_MYSQL_DB'))
-        new_user = User(**{'first_name': 'jack',
-                           'last_name': 'bond',
-                           'email': 'jack@bond.com',
-                           'password': 12345})
-        cur = db.cursor()
-        cur.execute('SELECT COUNT(*) FROM users')
-        old_count = cur.fetchall()
-        cur.close()
-        db.close()
-        new_user.save()
-        db = MySQLdb.connect(user=os.getenv('HBNB_MYSQL_USER'),
-                             host=os.getenv('HBNB_MYSQL_HOST'),
-                             passwd=os.getenv('HBNB_MYSQL_PWD'),
-                             port=3306,
-                             db=os.getenv('HBNB_MYSQL_DB'))
-        cur = db.cursor()
-        cur.execute('SELECT COUNT(*) FROM users')
-        new_count = cur.fetchall()
-        self.assertEqual(new_count[0][0], old_count[0][0] + 1)
-        cur.close()
-        db.close()
+    @unittest.skipIf(type(models.storage) == FileStorage, "Test FS")
+    def test_delete(self):
+        cls = State(name="Texas")
+        self.storage._DBStorage__session.add(cls)
+        self.storage._DBStorage__session.commit()
+        self.storage.delete(cls)
+        self.assertIn(cls, list(self.storage._DBStorage__session.deleted))
+
+    @unittest.skipIf(type(models.storage) == FileStorage, "Test FS")
+    def test_none(self):
+        try:
+            self.storage.delete(None)
+        except Exception:
+            self.fail
+
+
+if __name__ == "__main__":
+    unittest.main()
