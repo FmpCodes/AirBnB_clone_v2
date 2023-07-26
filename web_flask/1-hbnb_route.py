@@ -1,39 +1,24 @@
 #!/usr/bin/python3
-<<<<<<< HEAD
-
-from flask import Flask
-=======
-"""Starts a Flask web application"""
->>>>>>> d45487f8b7bb0f169ae648792a5c27416139bc59
+"""Start web application with two routings
+"""
 
 from flask import Flask
 app = Flask(__name__)
 
 
-@app.route('/', strict_slashes=False)
-<<<<<<< HEAD
+@app.route('/')
 def hello():
-    return "Hello HBNB!"
-=======
-def hello_holberton():
-    """Returns a string at the root route"""
+    """Return string when route queried
+    """
     return 'Hello HBNB!'
->>>>>>> d45487f8b7bb0f169ae648792a5c27416139bc59
 
 
-@app.route('/hbnb', strict_slashes=False)
+@app.route('/hbnb')
 def hbnb():
-<<<<<<< HEAD
-    return "HBNB"
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
-=======
-    """Returns a string at the /hbnb route"""
+    """Return string when route queried
+    """
     return 'HBNB'
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
->>>>>>> d45487f8b7bb0f169ae648792a5c27416139bc59
+    app.url_map.strict_slashes = False
+    app.run(host='0.0.0.0', port=5000)

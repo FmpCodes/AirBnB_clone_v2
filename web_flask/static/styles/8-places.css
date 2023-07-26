@@ -5,28 +5,24 @@
     padding: 0 20px;
     margin-bottom: 8%;
 }
-
 .places h1 {
     width: 100%;
     text-align: left;
     font-size: 30px;
 }
-
 .places article {
     width: 390px;
     padding: 20px;
+	padding-bottom: 40px;
     margin: 20px;
     border: 1px solid #FF5A5F;
     border-radius: 4px;
-    height: fit-content;
 }
-
 .places h2 {
-    font-size: 30px;
-    text-align: center;
-    margin-top: 0;
+	font-size: 30px;
+	text-align: center;
+	margin-top: 0;
 }
-
 .title_box {
     display: flex;
     justify-content: space-between;
@@ -34,10 +30,10 @@
 }
 
 .title_box h2 {
-    text-align: start;
-    margin-top: 20px;
+    text-align: left;
+    margin: 25px 15px 0px 0px;
+	padding-bottom: 20px;
 }
-
 .price_by_night {
     display: flex;
     height: 60px;
@@ -86,7 +82,5 @@
 }
 
 .user {
-    margin-bottom: 1.5%;
+  margin-bottom: 1.5%;
 }
-
-Footer

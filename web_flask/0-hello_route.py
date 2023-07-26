@@ -1,31 +1,17 @@
-<<<<<<< HEAD
-tial script for undesrtand flask"""
-
-
-from flask import Flask
-=======
 #!/usr/bin/python3
-"""Starts a Flask web application"""
->>>>>>> d45487f8b7bb0f169ae648792a5c27416139bc59
+"""Start a flask web app
+"""
 
 from flask import Flask
 app = Flask(__name__)
 
 
-@app.route('/', strict_slashes=False)
-<<<<<<< HEAD
-def hello():
-    return "Hello HBNB!"
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
-=======
-def hello_holberton():
-    """Returns a string at the root route"""
+@app.route('/')
+def hello_flask():
+    """Return string when route queried
+    """
     return 'Hello HBNB!'
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
->>>>>>> d45487f8b7bb0f169ae648792a5c27416139bc59
+    app.url_map.strict_slashes = False
+    app.run(host='0.0.0.0', port=5000)
